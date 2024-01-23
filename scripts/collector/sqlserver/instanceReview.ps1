@@ -32,6 +32,9 @@
     Signals if the perfmon collection should be skipped (default:false) 
 .PARAMETER manualUniqueId
     Tag that can be supplied by the customer to make a collection unique.  Maps to the internal variable dmaManualId (optional)
+.PARAMETER collectVMSpecs
+    Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
+    Note the script will attempt to collect VM specs using the current users regardless.
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
@@ -49,7 +52,8 @@ Param(
     [Parameter(Mandatory = $false)][string]$collectionUserName,
     [Parameter(Mandatory = $false)][string]$collectionUserPass,
     [Parameter(Mandatory = $false)][string]$ignorePerfmon = "false",
-    [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA"
+    [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA",
+    [Parameter(Mandatory = $false)][switch]$collectVMSpecs
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -413,8 +417,8 @@ else {
 
 ## Getting HW Specs.   
 $dbCollectOut = $foldername + '/' + $computerSpecsFile   
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "FILE"
-.\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "FILE"
+.\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId -requestCreds:$collectVMSpecs
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
